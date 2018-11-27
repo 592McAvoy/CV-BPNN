@@ -17,9 +17,10 @@ if __name__ == "__main__":
     data, label = loadfile()
     net = BPNN.Net()
     net.setData(data, label)
-    net.setLayers(layer_num=100, layer_points=15)
+    net.setLayers(layer_num=100, layer_points=7)
     for i in range(100):
-        loss, score = net.train(delta=1, reg=0.3, learning_rate=0.06)
-        print("loss: ")
-        print(loss)
+        loss, score = net.train(delta=1, reg=0.3, learning_rate=0.05)
+        print("iter %d:\t"%(i))
+        print("loss: ", loss)
+
 

@@ -1,15 +1,15 @@
 import numpy as np
+from util import *
 
-def sigmoid(x):
-    s = 1.0 / (1 + np.exp(-x))
-    return s
 
 class Layer:
     def __init__(self, in_size, out_size):
-        self.W = np.random.randn(in_size, out_size)
-        self.b = np.random.randn(out_size)
+        self.W = np.random.randn(in_size, out_size) / np.sqrt(in_size)
+        self.b = np.zeros(out_size)#/np.sqrt(in_size)
         self.dw = np.zeros((in_size, out_size))
         self.db = np.zeros(out_size)
+        self.BN = BN()
+        self.activate = Activate()
 
     # X shape(N, A)
     # W shape(A, B)
@@ -17,21 +17,37 @@ class Layer:
     # out shape(N, B)
     def forward(self, x):
         tmp = np.dot(x, self.W) + self.b
-
-        # Logistic
         tmp = tmp.astype(float)
-        out = sigmoid(tmp)
 
-        self.buffer_out = out
+        norm = self.BN.forward(tmp)
+
+        # 1.sigmoid
+        #out = self.activate.sigmoidFoward(norm)
+
+        # 2.tanh
+        #out = self.activate.tanhFoward(norm)
+
+        # 3.ReLU
+        out = self.activate.ReLUFoward(norm)
+
         self.buffer_x = x
 
         return out
 
     def backward(self, dout):
-        out = self.buffer_out
         x = self.buffer_x
 
-        dtmp = out*(1-out)*dout
+        # 1.sigmoid
+        #dnorm = self.activate.sigmoidBackward(dout)
+
+        # 2.tanh
+        dnorm = self.activate.tanhBackward(dout)
+
+        # 3.ReLU
+        dnorm = self.activate.ReLUBackward(dout)
+
+        dtmp = self.BN.backward(dnorm)
+
         self.dw = np.dot(x.T, dtmp)
         self.db = np.sum(dtmp, axis=0)
         dx = np.dot(dtmp, self.W.T)
@@ -39,7 +55,7 @@ class Layer:
 
     def update(self, lr):
         self.W = self.W - self.dw * lr
-        self.b -= self.db * lr
+        self.b = self.b - self.db * lr
 
 
 class Net:
@@ -76,20 +92,20 @@ class Net:
             prev = hiden[i].forward(prev)
 
         #  prev(N, layerPoint)
-        out = np.dot(prev, self.W)  #(N, laybelnum)
+        score = np.dot(prev, self.W)  #(N, laybelnum)
 
         #hinge loss
-        N, C = out.shape
+        N, C = score.shape
         loss = 0
         dW = np.zeros_like(self.W) #(layerPoint, labelNum)
         dprev = np.zeros(prev.shape)
         for i in range(N):
             correct_idx = self.target[i].astype(int)
-            correct_score = out[i, correct_idx]
+            correct_score = score[i, correct_idx]
             for j in range(C):
                 if j == correct_idx:
                     continue
-                margin = out[i, j] - correct_score + delta
+                margin = score[i, j] - correct_score + delta
                 if margin > 0:
                     loss += margin
                     dW[:, correct_idx] += -prev[i].reshape(-1, 1)
@@ -109,6 +125,6 @@ class Net:
             hiden[i - 1].update(learning_rate)
 
         self.hidden_layers = hiden
-        return loss, out
+        return loss, score
 
 
