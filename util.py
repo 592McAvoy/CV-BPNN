@@ -1,5 +1,9 @@
 import numpy as np
 
+"""
+Batch Normalization     out = (x - mean(x)) / variance(x)
+"""
+
 
 class BN:
     def __init__(self):
@@ -22,6 +26,14 @@ class BN:
         dmu = -np.sum(dx_hat / np.sqrt(sample_var + eps), axis=0) - 2 * dsigma * np.sum(x - sample_mean, axis=0) / N
         dx = dx_hat / np.sqrt(sample_var + eps) + 2.0 * dsigma * (x - sample_mean) / N + dmu / N
         return dx
+
+
+"""
+Activation Function
+    1.Sigmiod   out = 1 / (1 - exp(-x))
+    2.Tanh      out = (exp(x)-exp(-x) / (exp(x)+exp(-x)
+    3.ReLU      out = max(0, x)
+"""
 
 
 class Activate:
